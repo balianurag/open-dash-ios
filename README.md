@@ -46,7 +46,7 @@ You do not need a paid Apple Developer account to try it.
 2. Clone and start the project:
 
 ```bash
-git clone https://github.com/anbali_expedia/open-dash-ios.git
+git clone https://github.com/balianurag/open-dash-ios.git
 cd open-dash-ios
 npm install
 npx expo start
