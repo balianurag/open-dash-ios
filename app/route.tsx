@@ -12,7 +12,13 @@ export default function RouteScreen() {
   const { palette, settings, savedLocations } = dash;
   const router = useRouter();
   const params = useLocalSearchParams<{ q?: string }>();
-  const [input, setInput] = useState(typeof params.q === 'string' ? params.q : '');
+  const incoming = typeof params.q === 'string' ? params.q : '';
+  const [input, setInput] = useState(incoming);
+  const [seenIncoming, setSeenIncoming] = useState(incoming);
+  if (incoming !== seenIncoming) {
+    setSeenIncoming(incoming);
+    if (incoming.trim()) setInput(incoming);
+  }
   const [name, setName] = useState('');
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
@@ -41,12 +47,9 @@ export default function RouteScreen() {
   }
 
   useEffect(() => {
-    if (typeof params.q === 'string' && params.q.trim()) {
-      setInput(params.q);
-      void applyText(params.q);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.q]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (incoming.trim()) void applyText(incoming);
+  }, [incoming]);
 
   function openNav() {
     if (lat == null || lng == null) return;

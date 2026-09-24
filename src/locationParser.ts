@@ -51,14 +51,6 @@ export function extractPlaceName(s: string): string | null {
   return null;
 }
 
-function hostOf(value: string): string | null {
-  try {
-    return new URL(value).host.toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
 export function isAllowedNetworkUrl(value: string): boolean {
   try {
     const uri = new URL(value);

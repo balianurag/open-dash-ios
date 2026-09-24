@@ -1,17 +1,84 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, Switch, Text, View } from 'react-native';
 
 import { Card, Chip, Divider, Eyebrow, Screen } from '@/src/components';
+import { formatDate } from '@/src/format';
 import { CURRENCIES } from '@/src/models';
+import { notificationsSupported, requestNotificationPermission } from '@/src/notifications';
 import { useOpenDash } from '@/src/store';
 import { THEME_NAMES } from '@/src/theme';
 
 export default function MoreScreen() {
   const dash = useOpenDash();
   const { palette, settings } = dash;
-  const [page, setPage] = useState<'root' | 'appearance' | 'about' | 'help'>('root');
+  const [page, setPage] = useState<'root' | 'appearance' | 'reminders' | 'about' | 'help'>('root');
+  const [asking, setAsking] = useState(false);
+
+  async function toggleReminders(enabled: boolean) {
+    if (!enabled) return dash.setRemindersEnabled(false);
+    if (!notificationsSupported) {
+      return Alert.alert('Reminders need the iPhone app', 'Notifications are not available in the web preview.');
+    }
+    setAsking(true);
+    const allowed = await requestNotificationPermission().catch(() => false);
+    setAsking(false);
+    if (allowed) return dash.setRemindersEnabled(true);
+    Alert.alert(
+      'Notifications are off',
+      'Allow notifications for OpenDash in Settings to get service, PUC, and insurance reminders.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => void Linking.openSettings() },
+      ],
+    );
+  }
+
+  if (page === 'reminders') {
+    const upcoming = dash.upcomingReminders.slice(0, 5);
+    return (
+      <Screen title="Reminders" action={<Back onPress={() => setPage('root')} />}>
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: palette.text, fontSize: 16, fontWeight: '600' }}>Service & document reminders</Text>
+              <Text style={{ color: palette.textMid, marginTop: 4, lineHeight: 20 }}>
+                PUC and insurance: 7 days before and on the expiry day at 9:00. Service: when an interval
+                becomes due or overdue by distance, and on its 12-month date.
+              </Text>
+            </View>
+            <Switch
+              value={settings.remindersEnabled}
+              disabled={asking}
+              onValueChange={(on) => void toggleReminders(on)}
+              trackColor={{ true: palette.accent, false: palette.surfaceHigh }}
+            />
+          </View>
+        </Card>
+        {settings.remindersEnabled ? (
+          <>
+            <Eyebrow>Coming up</Eyebrow>
+            <Card>
+              {upcoming.length === 0 ? (
+                <Text style={{ color: palette.textMid, lineHeight: 20 }}>
+                  Nothing scheduled. Add PUC and insurance expiry dates in Vehicles.
+                </Text>
+              ) : (
+                upcoming.map((r, i) => (
+                  <View key={r.id}>
+                    {i > 0 ? <Divider /> : null}
+                    <Text style={{ color: palette.text, fontWeight: '600' }}>{r.title}</Text>
+                    <Text style={{ color: palette.textLo, marginTop: 3 }}>{formatDate(r.date.getTime())} · 9:00</Text>
+                  </View>
+                ))
+              )}
+            </Card>
+          </>
+        ) : null}
+      </Screen>
+    );
+  }
 
   if (page === 'appearance') {
     return (
@@ -101,6 +168,10 @@ export default function MoreScreen() {
       <Card>
         <Pressable onPress={() => setPage('appearance')}>
           <MenuRow icon="color-palette-outline" label="Appearance & units" />
+        </Pressable>
+        <Divider />
+        <Pressable onPress={() => setPage('reminders')}>
+          <MenuRow icon="notifications-outline" label="Reminders" />
         </Pressable>
         <Divider />
         <Pressable onPress={() => setPage('help')}>

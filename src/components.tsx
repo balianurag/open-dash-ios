@@ -118,8 +118,9 @@ export function Chip({ label, active, onPress }: { label: string; active?: boole
 
 export function Field({
   label,
+  error,
   ...props
-}: { label: string } & TextInputProps) {
+}: { label: string; error?: string } & TextInputProps) {
   const { palette } = useOpenDash();
   return (
     <View style={styles.field}>
@@ -128,10 +129,15 @@ export function Field({
         placeholderTextColor={palette.textLo}
         style={[
           styles.input,
-          { color: palette.text, backgroundColor: palette.surfaceHigh, borderColor: palette.line },
+          {
+            color: palette.text,
+            backgroundColor: palette.surfaceHigh,
+            borderColor: error ? palette.alert : palette.line,
+          },
         ]}
         {...props}
       />
+      {error ? <Text style={[styles.fieldError, { color: palette.alert }]}>{error}</Text> : null}
     </View>
   );
 }
@@ -203,6 +209,7 @@ const styles = StyleSheet.create({
   chipLabel: { fontSize: 12, fontWeight: '600' },
   field: { gap: 6, marginTop: 10 },
   fieldLabel: { fontSize: 12, fontWeight: '600' },
+  fieldError: { fontSize: 12 },
   input: {
     borderWidth: 1,
     borderRadius: 14,

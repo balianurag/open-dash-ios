@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { officialScheduleFor } from './maintenance';
+import { addMonths, officialScheduleFor } from './maintenance';
 import {
   DEFAULT_VEHICLE,
   type CurrencyCode,
@@ -12,6 +12,7 @@ import {
   type SavedLocation,
   type Vehicle,
 } from './models';
+import { plannedReminders, syncReminders, type FleetVehicle, type PlannedReminder } from './reminders';
 import { createRepo, newSid } from './repo';
 import { DEFAULT_SETTINGS, type Persisted, type Repo, type Settings } from './repoTypes';
 import { paletteFor, type Palette, type ThemeName } from './theme';
@@ -28,6 +29,7 @@ type DashState = {
   savedLocations: SavedLocation[];
   settings: Settings;
   avgKmplLast5: number | null;
+  upcomingReminders: PlannedReminder[];
 };
 
 type DashActions = {
@@ -60,36 +62,32 @@ type DashActions = {
   setTheme: (theme: ThemeName) => Promise<void>;
   setCurrency: (code: CurrencyCode) => Promise<void>;
   setMapProvider: (provider: 'apple' | 'google') => Promise<void>;
+  setRemindersEnabled: (enabled: boolean) => Promise<void>;
 };
 
 type DashContextValue = DashState & DashActions;
 const DashContext = createContext<DashContextValue | null>(null);
 
-function viewFrom(data: Persisted): Omit<DashState, 'ready'> {
-  const activeVehicle = data.vehicles.find((v) => v.id === data.activeVehicleId) ?? data.vehicles[0] ?? DEFAULT_VEHICLE;
-  const vehicleFuel = data.fuel
-    .filter((f) => f.vehicleId === activeVehicle.id)
-    .sort((a, b) => b.odometerKm - a.odometerKm || b.dateMs - a.dateMs);
-  const fuel: FuelFill[] = vehicleFuel.map((f, i) => {
-    const prev = vehicleFuel[i + 1];
-    const kmpl = prev && f.litres > 0 && f.odometerKm > prev.odometerKm ? (f.odometerKm - prev.odometerKm) / f.litres : null;
-    return { ...f, kmpl };
-  });
-  const odometerKm = Math.max(data.odometerByVehicle[activeVehicle.id] ?? 0, fuel[0]?.odometerKm ?? 0);
-  const expenses = data.expenses
-    .filter((e) => e.vehicleId === activeVehicle.id)
-    .sort((a, b) => b.dateMs - a.dateMs);
+type FleetSource = Pick<Persisted, 'vehicles' | 'maintenance' | 'odometerByVehicle' | 'fuel'>;
+
+function vehicleOdometer(data: FleetSource, vehicleId: string): number {
+  const latestFuel = data.fuel
+    .filter((f) => f.vehicleId === vehicleId)
+    .reduce((max, f) => Math.max(max, f.odometerKm), 0);
+  return Math.max(data.odometerByVehicle[vehicleId] ?? 0, latestFuel);
+}
+
+function maintRowsFor(data: FleetSource, vehicleId: string, odometerKm: number, now: number): MaintRow[] {
   const uniqueMaint = Object.values(
     data.maintenance
-      .filter((m) => m.vehicleId === activeVehicle.id)
+      .filter((m) => m.vehicleId === vehicleId)
       .reduce<Record<string, MaintenanceItem>>((acc, item) => {
         const key = item.name.trim().toLowerCase();
         if (!acc[key] || item.lastDoneOdoKm > acc[key].lastDoneOdoKm) acc[key] = item;
         return acc;
       }, {}),
   );
-  const now = Date.now();
-  const maint: MaintRow[] = uniqueMaint.map((item) => {
+  return uniqueMaint.map((item) => {
     const official = officialScheduleFor(item);
     const remainingKm = item.lastDoneOdoKm + item.intervalKm - odometerKm;
     const remainingDays = official?.intervalMonths
@@ -107,17 +105,42 @@ function viewFrom(data: Persisted): Omit<DashState, 'ready'> {
           : 'ok';
     return { item, remainingKm, remainingDays, tone, official };
   });
+}
+
+function fleetFrom(data: FleetSource, now: number): FleetVehicle[] {
+  return data.vehicles.map((vehicle) => ({
+    vehicle,
+    rows: maintRowsFor(data, vehicle.id, vehicleOdometer(data, vehicle.id), now),
+  }));
+}
+
+function viewFrom(data: Persisted): Omit<DashState, 'ready'> {
+  const activeVehicle = data.vehicles.find((v) => v.id === data.activeVehicleId) ?? data.vehicles[0] ?? DEFAULT_VEHICLE;
+  const vehicleFuel = data.fuel
+    .filter((f) => f.vehicleId === activeVehicle.id)
+    .sort((a, b) => b.odometerKm - a.odometerKm || b.dateMs - a.dateMs);
+  const fuel: FuelFill[] = vehicleFuel.map((f, i) => {
+    const prev = vehicleFuel[i + 1];
+    const kmpl = prev && f.litres > 0 && f.odometerKm > prev.odometerKm ? (f.odometerKm - prev.odometerKm) / f.litres : null;
+    return { ...f, kmpl };
+  });
+  const odometerKm = vehicleOdometer(data, activeVehicle.id);
+  const expenses = data.expenses
+    .filter((e) => e.vehicleId === activeVehicle.id)
+    .sort((a, b) => b.dateMs - a.dateMs);
+  const now = Date.now();
   return {
     vehicles: data.vehicles,
     activeVehicleId: activeVehicle.id,
     odometerKm,
     expenses,
     fuel,
-    maint,
+    maint: maintRowsFor(data, activeVehicle.id, odometerKm, now),
     rides: [...data.rides].sort((a, b) => b.startMs - a.startMs),
     savedLocations: [...data.savedLocations].sort((a, b) => b.createdMs - a.createdMs),
     settings: data.settings,
     avgKmplLast5: average(fuel.map((f) => f.kmpl).filter((n): n is number => n != null).slice(0, 5)),
+    upcomingReminders: plannedReminders(fleetFrom(data, now), now),
   };
 }
 
@@ -163,6 +186,14 @@ export function OpenDashProvider({ children }: { children: React.ReactNode }) {
     },
     [repo],
   );
+
+  const { vehicles, maintenance, odometerByVehicle, fuel } = data;
+  const remindersEnabled = data.settings.remindersEnabled;
+  useEffect(() => {
+    if (!ready || !repo) return;
+    const fleet = fleetFrom({ vehicles, maintenance, odometerByVehicle, fuel }, Date.now());
+    void syncReminders(remindersEnabled, fleet, repo);
+  }, [ready, repo, vehicles, maintenance, odometerByVehicle, fuel, remindersEnabled]);
 
   const view = useMemo(() => viewFrom(data), [data]);
   const activeVehicle = view.vehicles.find((v) => v.id === view.activeVehicleId) ?? DEFAULT_VEHICLE;
@@ -284,6 +315,8 @@ export function OpenDashProvider({ children }: { children: React.ReactNode }) {
       setTheme: (theme) => commit({ ...data, settings: { ...data.settings, theme } }),
       setCurrency: (code) => commit({ ...data, settings: { ...data.settings, currency: code } }),
       setMapProvider: (provider) => commit({ ...data, settings: { ...data.settings, mapProvider: provider } }),
+      setRemindersEnabled: (enabled) =>
+        commit({ ...data, settings: { ...data.settings, remindersEnabled: enabled } }),
     }),
     [activeVehicle, commit, data, view.odometerKm, view.settings.theme],
   );
@@ -301,10 +334,4 @@ export function useOpenDash(): DashContextValue {
 function average(nums: number[]): number | null {
   if (!nums.length) return null;
   return nums.reduce((a, b) => a + b, 0) / nums.length;
-}
-
-function addMonths(ms: number, months: number): number {
-  const d = new Date(ms);
-  d.setMonth(d.getMonth() + months);
-  return d.getTime();
 }

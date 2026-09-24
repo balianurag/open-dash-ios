@@ -26,6 +26,13 @@ export async function createRepo(): Promise<Repo> {
   return {
     load: () => loadAll(db),
     save: (data) => saveAll(db, data),
+    loadNotifiedServices: async () => {
+      const row = await db.getFirstAsync<{ keys: string }>('SELECT keys FROM service_notified WHERE id = 1');
+      return row ? (JSON.parse(row.keys) as string[]) : [];
+    },
+    saveNotifiedServices: async (keys) => {
+      await db.runAsync('INSERT OR REPLACE INTO service_notified (id, keys) VALUES (1, ?)', [JSON.stringify(keys)]);
+    },
   };
 }
 
@@ -186,6 +193,7 @@ async function loadAll(db: SQLite.SQLiteDatabase): Promise<Persisted> {
       theme,
       currency,
       mapProvider: settingsMap.map_provider === 'google' ? 'google' : 'apple',
+      remindersEnabled: settingsMap.reminders_enabled === '1',
     },
   };
 }
@@ -260,6 +268,10 @@ async function saveAll(db: SQLite.SQLiteDatabase, data: Persisted) {
       'map_provider',
       data.settings.mapProvider,
     ]);
+    await db.runAsync('INSERT INTO app_settings (key, value) VALUES (?, ?)', [
+      'reminders_enabled',
+      data.settings.remindersEnabled ? '1' : '0',
+    ]);
   });
 }
 
@@ -288,6 +300,7 @@ async function migrate(db: SQLite.SQLiteDatabase) {
       distance_m REAL NOT NULL, duration_s INTEGER NOT NULL, avg_speed REAL NOT NULL, max_speed REAL NOT NULL,
       start_lat REAL NOT NULL DEFAULT 0, start_lng REAL NOT NULL DEFAULT 0, end_lat REAL NOT NULL DEFAULT 0, end_lng REAL NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS service_notified (id INTEGER PRIMARY KEY CHECK (id = 1), keys TEXT NOT NULL);
   `);
   const vehicles = await db.getAllAsync<{ id: string }>('SELECT id FROM vehicle');
   if (vehicles.length === 0) {

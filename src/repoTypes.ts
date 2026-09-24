@@ -13,6 +13,7 @@ export type Settings = {
   theme: ThemeName;
   currency: CurrencyCode;
   mapProvider: 'apple' | 'google';
+  remindersEnabled: boolean;
 };
 
 export type Persisted = {
@@ -30,10 +31,13 @@ export type Persisted = {
 export type Repo = {
   load(): Promise<Persisted>;
   save(data: Persisted): Promise<void>;
+  loadNotifiedServices(): Promise<string[]>;
+  saveNotifiedServices(keys: string[]): Promise<void>;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: DEFAULT_THEME,
   currency: 'INR',
   mapProvider: 'apple',
+  remindersEnabled: false,
 };

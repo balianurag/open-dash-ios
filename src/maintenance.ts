@@ -79,6 +79,12 @@ export function officialScheduleFor(item: MaintenanceItem): OfficialSchedule | n
   }
 }
 
+export function addMonths(ms: number, months: number): number {
+  const d = new Date(ms);
+  d.setMonth(d.getMonth() + months);
+  return d.getTime();
+}
+
 export function iconForKey(key: string): string {
   switch (key) {
     case 'chain':

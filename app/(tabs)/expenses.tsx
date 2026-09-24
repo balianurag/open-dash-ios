@@ -31,7 +31,7 @@ function periods(): Period[] {
 export default function ExpensesScreen() {
   const dash = useOpenDash();
   const { palette, expenses, settings, activeVehicle } = dash;
-  const allPeriods = useMemo(periods, []);
+  const allPeriods = useMemo(() => periods(), []);
   const [category, setCategory] = useState('All Expenses');
   const [period, setPeriod] = useState(allPeriods[0]);
   const [adding, setAdding] = useState(false);

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Alert, Modal, Pressable, Text, View } from 'react-native';
 
 import { Button, Card, Chip, Divider, Eyebrow, Field, Screen } from '@/src/components';
-import { formatDate, isProblemValue } from '@/src/format';
+import { formatDate, isProblemValue, parseIsoDate } from '@/src/format';
 import type { Vehicle } from '@/src/models';
 import { useOpenDash } from '@/src/store';
 
@@ -89,6 +89,11 @@ function Meta({ label, value, alert }: { label: string; value: string; alert?: b
   );
 }
 
+function expiryError(value: string): string | undefined {
+  if (value === 'Not set' || parseIsoDate(value)) return undefined;
+  return 'Use YYYY-MM-DD, for example 2026-03-31. Leave empty if not set.';
+}
+
 function VehicleEditor({
   visible,
   title,
@@ -104,6 +109,9 @@ function VehicleEditor({
 }) {
   const { palette } = useOpenDash();
   const [form, setForm] = useState(initial);
+  const [today] = useState(() => formatDate(Date.now()));
+  const pucError = expiryError(form.puc);
+  const insuranceError = expiryError(form.insurance);
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: '#00000088' }}>
@@ -127,23 +135,29 @@ function VehicleEditor({
           <Field
             label="PUC expiry"
             value={form.puc === 'Not set' ? '' : form.puc}
-            onChangeText={(puc) => setForm({ ...form, puc: puc || 'Not set' })}
+            onChangeText={(puc) => setForm({ ...form, puc: puc.trim() || 'Not set' })}
             placeholder="YYYY-MM-DD"
+            keyboardType="numbers-and-punctuation"
+            autoCorrect={false}
+            error={pucError}
           />
           <Field
             label="Insurance expiry"
             value={form.insurance === 'Not set' ? '' : form.insurance}
-            onChangeText={(insurance) => setForm({ ...form, insurance: insurance || 'Not set' })}
+            onChangeText={(insurance) => setForm({ ...form, insurance: insurance.trim() || 'Not set' })}
             placeholder="YYYY-MM-DD"
+            keyboardType="numbers-and-punctuation"
+            autoCorrect={false}
+            error={insuranceError}
           />
           <Field
             label="Last service"
             value={form.service === 'Not set' ? '' : form.service}
             onChangeText={(service) => setForm({ ...form, service: service || 'Not set' })}
-            placeholder={formatDate(Date.now())}
+            placeholder={today}
           />
           <View style={{ height: 12 }} />
-          <Button label="Save" onPress={() => onSave(form)} />
+          <Button label="Save" disabled={!!pucError || !!insuranceError} onPress={() => onSave(form)} />
           <Button label="Cancel" variant="ghost" onPress={onClose} />
         </View>
       </View>

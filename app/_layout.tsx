@@ -2,9 +2,10 @@ import * as Linking from 'expo-linking';
 import { DarkTheme, Stack, ThemeProvider, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { LoadingScreen } from '@/src/components';
+import { hasActiveRide } from '@/src/rideRecorder';
 import { OpenDashProvider, useOpenDash } from '@/src/store';
 
 export { ErrorBoundary } from 'expo-router';
@@ -30,6 +31,15 @@ function RootLayoutNav() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
+
+  const checkedRide = useRef(false);
+  useEffect(() => {
+    if (!ready || checkedRide.current) return;
+    checkedRide.current = true;
+    void hasActiveRide().then((active) => {
+      if (active) router.push('/rides');
+    });
+  }, [ready, router]);
 
   useEffect(() => {
     function open(url: string | null) {

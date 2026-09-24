@@ -3,6 +3,7 @@ import { DEFAULT_VEHICLE, DEFAULT_VEHICLE_ID } from './models';
 import { DEFAULT_SETTINGS, type Persisted, type Repo } from './repoTypes';
 
 const KEY = 'opendash.v1';
+const NOTIFIED_KEY = 'opendash.v1.notified-services';
 
 export function newSid(): string {
   return crypto.randomUUID();
@@ -37,7 +38,10 @@ export async function createRepo(): Promise<Repo> {
     async load() {
       try {
         const raw = globalThis.localStorage?.getItem(KEY);
-        if (raw) return JSON.parse(raw) as Persisted;
+        if (raw) {
+          const saved = JSON.parse(raw) as Partial<Persisted>;
+          return { ...seed(), ...saved, settings: { ...DEFAULT_SETTINGS, ...saved.settings } };
+        }
       } catch {
         /* ignore */
       }
@@ -46,6 +50,22 @@ export async function createRepo(): Promise<Repo> {
     async save(data) {
       try {
         globalThis.localStorage?.setItem(KEY, JSON.stringify(data));
+      } catch {
+        /* ignore */
+      }
+    },
+    async loadNotifiedServices() {
+      try {
+        const raw = globalThis.localStorage?.getItem(NOTIFIED_KEY);
+        if (raw) return JSON.parse(raw) as string[];
+      } catch {
+        /* ignore */
+      }
+      return [];
+    },
+    async saveNotifiedServices(keys) {
+      try {
+        globalThis.localStorage?.setItem(NOTIFIED_KEY, JSON.stringify(keys));
       } catch {
         /* ignore */
       }

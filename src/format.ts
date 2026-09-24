@@ -41,6 +41,14 @@ export function formatDuration(sec: number): string {
   return `${m}m`;
 }
 
+export function parseIsoDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const [year, month, day] = [Number(match[1]), Number(match[2]) - 1, Number(match[3])];
+  const date = new Date(year, month, day);
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day ? date : null;
+}
+
 export function isProblemValue(value: string): boolean {
   const v = value.trim().toLowerCase();
   if (!v || v === 'not set') return true;

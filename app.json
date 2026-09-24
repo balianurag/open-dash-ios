@@ -45,7 +45,18 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "OpenDash records rides and previews routes using your location."
+          "locationWhenInUsePermission": "OpenDash records rides and previews routes using your location.",
+          "locationAlwaysAndWhenInUsePermission": "OpenDash keeps recording your ride while the phone is locked or in your pocket. Location is only used while a ride is recording.",
+          "locationAlwaysPermission": "OpenDash keeps recording your ride while the phone is locked or in your pocket. Location is only used while a ride is recording.",
+          "motionUsagePermission": false,
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "app.opendash.ios.widgets",
+          "groupIdentifier": "group.app.opendash.ios"
         }
       ]
     ],
