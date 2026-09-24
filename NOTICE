@@ -1,0 +1,32 @@
+OpenDash iOS
+Copyright 2026 OpenDash iOS contributors
+
+OpenDash iOS is an iOS wrapper inspired by, and migrating rider-facing
+features from, the original Android OpenDash project:
+
+OpenDash
+Copyright 2026 Subtle Sayak and contributors
+https://github.com/subtlesayak/open-dash
+Licensed under the Apache License, Version 2.0.
+
+OpenDash originated from and retains portions adapted from:
+
+NorthStar
+Copyright 2026 Aditya Dasika
+https://github.com/adityadasika21/NorthStar
+Licensed under the Apache License, Version 2.0.
+
+NorthStar credits:
+
+better-dash
+https://github.com/norbertFeron/better-dash
+Licensed under the Apache License, Version 2.0.
+
+This iOS app is an independent, unofficial companion. It does not include
+motorcycle-dashboard pairing, authentication, projection, streaming, hardware
+control, or dashboard-wallpaper playback.
+
+Third-party names and product names remain the property of their respective
+owners. Himalayan, Royal Enfield, and related marks are trademarks of their
+owners. Their appearance here does not indicate affiliation, endorsement,
+sponsorship, or approval.
