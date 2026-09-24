@@ -1,6 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import * as SQLite from 'expo-sqlite';
 
+import { dashboardFromJson } from './dashboard';
 import { H450_SEEDS } from './maintenance';
 import {
   CURRENCIES,
@@ -194,6 +195,7 @@ async function loadAll(db: SQLite.SQLiteDatabase): Promise<Persisted> {
       currency,
       mapProvider: settingsMap.map_provider === 'google' ? 'google' : 'apple',
       remindersEnabled: settingsMap.reminders_enabled === '1',
+      dashboard: dashboardFromJson(settingsMap.dashboard),
     },
   };
 }
@@ -271,6 +273,10 @@ async function saveAll(db: SQLite.SQLiteDatabase, data: Persisted) {
     await db.runAsync('INSERT INTO app_settings (key, value) VALUES (?, ?)', [
       'reminders_enabled',
       data.settings.remindersEnabled ? '1' : '0',
+    ]);
+    await db.runAsync('INSERT INTO app_settings (key, value) VALUES (?, ?)', [
+      'dashboard',
+      JSON.stringify(data.settings.dashboard),
     ]);
   });
 }

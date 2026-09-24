@@ -117,11 +117,11 @@ export default function MoreScreen() {
           <Text style={{ color: palette.accent, fontSize: 22, fontWeight: '700' }}>OpenDash iOS</Text>
           <Text style={{ color: palette.textMid, marginTop: 8, lineHeight: 22 }}>
             Independent, unofficial iOS companion derived from OpenDash. Local-first rider tools for vehicles,
-            garage, expenses, route preview, and ride history.
+            garage, expenses, route preview, ride history, and a phone ride dashboard.
           </Text>
           <Text style={{ color: palette.textLo, marginTop: 12, lineHeight: 20 }}>
-            This app does not pair with, project to, or control a motorcycle dashboard. Royal Enfield names remain
-            their trademarks. Apache License 2.0.
+            This app does not pair with, project to, or control a motorcycle dashboard. The ride dashboard runs on the
+            phone only. Royal Enfield names remain their trademarks. Apache License 2.0.
           </Text>
         </Card>
       </Screen>
@@ -138,6 +138,10 @@ export default function MoreScreen() {
             ['Garage', 'Track odometer and Himalayan 450 service intervals from the owner’s manual.'],
             ['Route preview', 'Paste a Maps or geo: link, then open turn-by-turn in Apple or Google Maps.'],
             ['Rides', 'Record a GPS session on the phone. The screen can stay in your pocket.'],
+            [
+              'Dashboard',
+              'A full-screen phone dash for a handlebar mount: speed, trip, heading, range, and service status in saved layouts. Phone GPS only — it never connects to the motorcycle.',
+            ],
           ].map(([title, body], i) => (
             <View key={title}>
               {i > 0 ? <Divider /> : null}

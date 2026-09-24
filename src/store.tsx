@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import type { DashboardSettings } from './dashboard';
 import { addMonths, officialScheduleFor } from './maintenance';
 import {
   DEFAULT_VEHICLE,
@@ -63,6 +64,7 @@ type DashActions = {
   setCurrency: (code: CurrencyCode) => Promise<void>;
   setMapProvider: (provider: 'apple' | 'google') => Promise<void>;
   setRemindersEnabled: (enabled: boolean) => Promise<void>;
+  updateDashboard: (update: (current: DashboardSettings) => DashboardSettings) => Promise<void>;
 };
 
 type DashContextValue = DashState & DashActions;
@@ -317,6 +319,8 @@ export function OpenDashProvider({ children }: { children: React.ReactNode }) {
       setMapProvider: (provider) => commit({ ...data, settings: { ...data.settings, mapProvider: provider } }),
       setRemindersEnabled: (enabled) =>
         commit({ ...data, settings: { ...data.settings, remindersEnabled: enabled } }),
+      updateDashboard: (update) =>
+        commit({ ...data, settings: { ...data.settings, dashboard: update(data.settings.dashboard) } }),
     }),
     [activeVehicle, commit, data, view.odometerKm, view.settings.theme],
   );

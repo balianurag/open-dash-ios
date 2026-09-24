@@ -1,3 +1,4 @@
+import { normalizeDashboard } from './dashboard';
 import { H450_SEEDS } from './maintenance';
 import { DEFAULT_VEHICLE, DEFAULT_VEHICLE_ID } from './models';
 import { DEFAULT_SETTINGS, type Persisted, type Repo } from './repoTypes';
@@ -40,7 +41,15 @@ export async function createRepo(): Promise<Repo> {
         const raw = globalThis.localStorage?.getItem(KEY);
         if (raw) {
           const saved = JSON.parse(raw) as Partial<Persisted>;
-          return { ...seed(), ...saved, settings: { ...DEFAULT_SETTINGS, ...saved.settings } };
+          return {
+            ...seed(),
+            ...saved,
+            settings: {
+              ...DEFAULT_SETTINGS,
+              ...saved.settings,
+              dashboard: normalizeDashboard(saved.settings?.dashboard),
+            },
+          };
         }
       } catch {
         /* ignore */

@@ -1,3 +1,4 @@
+import { DEFAULT_DASHBOARD, type DashboardSettings } from './dashboard';
 import type {
   CurrencyCode,
   Expense,
@@ -14,6 +15,7 @@ export type Settings = {
   currency: CurrencyCode;
   mapProvider: 'apple' | 'google';
   remindersEnabled: boolean;
+  dashboard: DashboardSettings;
 };
 
 export type Persisted = {
@@ -40,4 +42,5 @@ export const DEFAULT_SETTINGS: Settings = {
   currency: 'INR',
   mapProvider: 'apple',
   remindersEnabled: false,
+  dashboard: DEFAULT_DASHBOARD,
 };

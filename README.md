@@ -26,6 +26,7 @@ iOS cannot run an Android APK, so this is not a WebView shell around the Play St
 | Ride history | Migrated — phone GPS recording that keeps going with the screen locked |
 | Service due reminders | Migrated — plus PUC and insurance expiry reminders |
 | — | New on iOS — ride distance and time on the Lock Screen and Dynamic Island (Live Activity) |
+| — | New on iOS — **Ride Dashboard**: a full-screen phone dash for a handlebar mount, with saved layouts and night mode. Phone GPS and compass only; it does **not** connect to the motorcycle or its Tripper Dash |
 | Appearance themes (Hanle Black and the other OpenDash palettes) | Migrated |
 | Local-first storage | Migrated — SQLite on device |
 | Downloadable wallpaper pack | Not in this first release |
@@ -40,6 +41,19 @@ iOS cannot run an Android APK, so this is not a WebView shell around the Play St
 4. Paste a destination or `geo:` link under **More → Preview a route**.
 5. Record rides from **More → Ride history**.
 6. Turn on **More → Reminders** for service, PUC, and insurance alerts (enter PUC and insurance expiry as `YYYY-MM-DD`).
+7. Before you roll out, open **Dashboard**, pick a layout, and tap **Start** to put the ride dashboard on your handlebar-mounted phone.
+
+## Ride Dashboard
+
+A glanceable, full-screen dashboard **on the phone itself**, meant to be read at arm's length on a handlebar mount. It does **not** pair with, project to, or read data from the motorcycle's Tripper Dash or any other bike system; everything comes from the phone's GPS and compass and from what you have logged in OpenDash.
+
+- **Tiles:** speed (km/h from GPS), trip distance and ride time (since you opened the dashboard; hold the reset button to clear them), compass heading, clock, fuel range estimate, odometer, next service due, and PUC / insurance status.
+- **Layouts:** add, remove, reorder, and resize tiles (small or large) in the **Dashboard** tab. **Speed focus** makes speed the dominant tile. It ships with **Commute** and **Touring** layouts; you can add, rename, and delete your own and switch between them from the dashboard's top bar. Layouts are stored on the phone with the rest of your data.
+- **Fuel range is an estimate, not a fuel gauge.** It is tank size (17 L by default for the Himalayan 450, editable per bike) × your average km/l over the last five fill-ups, minus the distance since your last fill-up and what you ride with the dashboard open. It assumes you filled to full. Without two fill-ups with odometer readings it shows "Add fuel data".
+- **Look:** follows your theme. **Night mode** switches to pure black with brighter, bolder numbers.
+- The screen **stays awake** while the dashboard is open and sleeps normally again once you close it. If location is off, the dashboard says so and offers **Open Settings**; the other tiles keep working.
+
+The dashboard works in Expo Go. Speed, trip, and heading only update while it is on screen.
 
 ## Run on an iPhone with Expo Go
 

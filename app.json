@@ -11,7 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.opendash.ios",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "OpenDash records rides and previews routes using your location.",
+        "NSLocationWhenInUseUsageDescription": "OpenDash records rides, shows your speed and heading on the ride dashboard, and previews routes using your location.",
         "LSApplicationQueriesSchemes": ["comgooglemaps", "maps"]
       }
     },
@@ -45,7 +45,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "OpenDash records rides and previews routes using your location.",
+          "locationWhenInUsePermission": "OpenDash records rides, shows your speed and heading on the ride dashboard, and previews routes using your location.",
           "locationAlwaysAndWhenInUsePermission": "OpenDash keeps recording your ride while the phone is locked or in your pocket. Location is only used while a ride is recording.",
           "locationAlwaysPermission": "OpenDash keeps recording your ride while the phone is locked or in your pocket. Location is only used while a ride is recording.",
           "motionUsagePermission": false,

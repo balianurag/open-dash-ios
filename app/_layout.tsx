@@ -73,6 +73,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="route" options={{ presentation: 'modal' }} />
         <Stack.Screen name="rides" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="ride-dashboard" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
       </Stack>
     </ThemeProvider>
   );
